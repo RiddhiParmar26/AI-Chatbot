@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Pinterest AI Chatbot</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<!-- ================= Sidebar ================= -->
+
+<div class="sidebar">
+
+    <h2>🤖 AI Chat</h2>
+
+    <button onclick="newChat()">
+        ➕ New Chat
+    </button>
+
+    <button onclick="clearHistory()">
+        🗑 Clear History
+    </button>
+
+    <h3>Recent Chats</h3>
+
+    <div id="history-list">
+
+    </div>
+
+</div>
+
+<!-- ================= Main Container ================= -->
+
+<div class="container">
+
+    <!-- Header -->
+
+    <div class="header">
+
+        <h2>
+            ✨ AI Assistant
+        </h2>
+
+        <button onclick="toggleTheme()">
+            🌙
+        </button>
+
+    </div>
+
+    <!-- Chat Box -->
+
+    <div
+        id="chat-box"
+        class="chat-box">
+
+        <div class="bot-msg">
+
+            <b>🤖 AI Assistant</b>
+
+            <br><br>
+
+            👋 Hello!
+
+            <br><br>
+
+            Welcome to your AI Chatbot.
+
+            <br><br>
+
+            💬 Ask me anything.
+
+            <br>
+
+            🌍 I can answer in English and Gujarati.
+
+        </div>
+
+    </div>
+
+    <!-- ================= Input Area ================= -->
+
+<div class="input-area">
+
+    <!-- Emoji Button -->
+
+    <button class="icon-btn">
+        😊
+    </button>
+
+    <!-- Message Box -->
+
+    <textarea
+        id="msg"
+        placeholder="Type your message..."
+        rows="2">
+    </textarea>
+
+    <!-- Voice Button -->
+
+    <button
+        class="voice-btn"
+        onclick="startVoice()">
+        🎤
+    </button>
+
+    <!-- Send Button -->
+
+    <button
+        class="send-btn"
+        onclick="sendMessage()">
+        ➤
+    </button>
+
+</div>
+
+</div>
+
+<script>
+
+    async function sendMessage(){
+
+let input = document.getElementById("msg");
+
+let msg = input.value.trim();
+
+if(msg==="") return;
+
+let chatBox = document.getElementById("chat-box");
+
+chatBox.innerHTML += `
+<div class="user-msg">
+
+${msg}
+
+</div>`;
+
+chatBox.scrollTop = chatBox.scrollHeight;
+
+input.value = "";
+
+/* Loader */
+
+const typingDiv = document.createElement("div");
+
+typingDiv.className = "bot-msg";
+
+typingDiv.id = "typing";
+
+typingDiv.innerHTML = `
+<div class="loader"></div>
+`;
+
+chatBox.appendChild(typingDiv);
+
+try{
+
+let response = await fetch("/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+message:msg
+
+})
+
+});
+
+let data = await response.json();
+
+typingDiv.innerHTML = `
+
+<span>${data.reply}</span>
+
+<button
+class="copy-btn"
+onclick="copyText(this)">
+📋
+</button>
+
+`;
+
+loadHistory();
+
+chatBox.scrollTop = chatBox.scrollHeight;
+
+}
+
+catch(e){
+
+typingDiv.innerHTML =
+"❌ Connection Error";
+
+}
+
+}
+
+// ================= Voice Recognition =================
+
+function startVoice(){
+
+    if(!('webkitSpeechRecognition' in window)){
+
+        alert("Voice recognition not supported");
+
+        return;
+
+    }
+
+
+    let recognition = new webkitSpeechRecognition();
+
+    recognition.lang = "en-US";
+
+    recognition.continuous = false;
+
+    recognition.interimResults = false;
+
+
+    recognition.start();
+
+
+    recognition.onstart = function(){
+
+        console.log("Listening...");
+
+    };
+
+
+    recognition.onresult = function(event){
+
+        let voiceText =
+        event.results[0][0].transcript;
+
+
+        document.getElementById("msg").value = voiceText;
+
+    };
+
+
+    recognition.onerror = function(){
+
+        alert("Voice recognition error");
+
+    };
+
+}
+
+
+
+// ================= Copy Function =================
+
+function copyText(button){
+
+    let text =
+    button.parentElement.innerText;
+
+
+    navigator.clipboard.writeText(text);
+
+
+    button.innerHTML="✅";
+
+    setTimeout(()=>{
+
+        button.innerHTML="📋";
+
+    },1000);
+
+}
+
+
+
+// ================= New Chat =================
+
+function newChat(){
+
+    document.getElementById("chat-box").innerHTML = `
+
+    <div class="bot-msg">
+
+    <b>🤖 AI Assistant</b>
+
+    <br><br>
+
+    👋 New chat started.
+
+    <br><br>
+
+    Ask me anything 💬
+
+    </div>
+
+    `;
+
+}
+
+
+
+// ================= Clear History =================
+
+function clearHistory(){
+
+    localStorage.removeItem("chatHistory");
+
+    document.getElementById("history-list").innerHTML="";
+
+}
+
+
+
+// ================= Save History =================
+
+function saveHistory(message){
+
+    let history =
+    JSON.parse(localStorage.getItem("chatHistory")) || [];
+
+
+    history.push(message);
+
+
+    localStorage.setItem(
+        "chatHistory",
+        JSON.stringify(history)
+    );
+
+
+    loadHistory();
+
+}
+
+
+
+// ================= Load History =================
+
+async function loadHistory(){
+
+    let response = await fetch("/history");
+
+    let chats = await response.json();
+
+    let list = document.getElementById("history-list");
+
+    list.innerHTML = "";
+
+    chats.forEach(chat => {
+
+        list.innerHTML += `
+        <div class="history-item"
+             onclick="openChat(${chat[0]})">
+             💬 ${chat[1]}
+        </div>`;
+    });
+
+}
+
+
+// ================= Theme Switcher =================
+
+function toggleTheme(){
+
+    document.body.classList.toggle("dark");
+
+
+    let theme =
+    document.body.classList.contains("dark");
+
+
+    localStorage.setItem(
+        "theme",
+        theme
+    );
+
+}
+
+
+
+// ================= Enter Key Send =================
+
+document
+.getElementById("msg")
+.addEventListener("keydown",function(event){
+
+
+    if(event.key==="Enter" && !event.shiftKey){
+
+        event.preventDefault();
+
+        sendMessage();
+
+    }
+
+
+});
+
+
+
+// ================= Page Load =================
+
+window.onload=function(){
+
+
+    loadHistory();
+
+
+    let savedTheme =
+    localStorage.getItem("theme");
+
+
+    if(savedTheme==="true"){
+
+        document.body.classList.add("dark");
+
+    }
+
+
+};
+
+async function openChat(id){
+
+    let response = await fetch("/chat/" + id);
+
+    let data = await response.json();
+
+    let chatBox = document.getElementById("chat-box");
+
+    chatBox.innerHTML = `
+    <div class="user-msg">${data[0]}</div>
+    <div class="bot-msg">${data[1]}</div>
+    `;
+
+}
+
+window.onload = function(){
+
+    if(localStorage.getItem("theme") === "true"){
+        document.body.classList.add("dark");
+    }
+
+    loadHistory();
+
+}
+
+</script>
+
+</body>
+
+</html>
