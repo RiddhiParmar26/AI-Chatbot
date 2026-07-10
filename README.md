@@ -91,6 +91,10 @@ http://127.0.0.1:5000
 ### Dark Mode
 ![Dark Mode](screenshots/dark-mode.png.png)
 
+## 🚀 Live Demo
+
+🔗 [Try AI Chatbot Live](https://ai-chatbot-861o.onrender.com)
+
 ## 👩‍💻 Author
 
 **Riddhi Parmar**
