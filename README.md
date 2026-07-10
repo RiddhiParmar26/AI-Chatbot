@@ -83,13 +83,13 @@ http://127.0.0.1:5000
 ## 📸 Screenshots
 
 ### Home Screen
-![Home](screenshots/home.png)
+![Home](screenshots/home.png.png)
 
 ### AI Chat
-![Chat](screenshots/chat.png)
+![Chat](screenshots/chat.png.png)
 
 ### Dark Mode
-![Dark Mode](screenshots/dark-mode.png)
+![Dark Mode](screenshots/dark-mode.png.png)
 
 ## 👩‍💻 Author
 
